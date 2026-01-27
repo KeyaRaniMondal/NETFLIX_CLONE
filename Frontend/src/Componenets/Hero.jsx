@@ -1,5 +1,4 @@
 import { Bookmark, Play } from "lucide-react";
-import herobg from "../assets/hero.png"
 import { useEffect, useState } from "react";
 const Hero = () => {
     const [movie, setMovie] = useState(null)
