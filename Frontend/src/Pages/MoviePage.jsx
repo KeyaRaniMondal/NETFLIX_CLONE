@@ -1,10 +1,11 @@
 import { Play } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, Link } from "react-router-dom";
 
 const MoviePage = () => {
     const { id } = useParams();
     const [movieData, setMovieData] = useState(null);
+    const [recommendations, setRecommendations] = useState([]);
     const options = {
         method: 'GET',
         headers: {
@@ -20,7 +21,10 @@ const MoviePage = () => {
                 setMovieData(res);
             })
             .catch(err => console.error(err));
-
+        fetch(`https://api.themoviedb.org/3/movie/${id}/recommendations?language=en-US&page=1`, options)
+            .then(res => res.json())
+            .then(res => { console.log('recommendations response', res); setRecommendations(res.results || []) })
+            .catch(err => console.error(err));
     }, [id])
     if (!movieData) {
         return <div className="text-red-500 justify-center">Loading...</div>
@@ -51,7 +55,7 @@ const MoviePage = () => {
                         </div>
                         <div className="flex flex-wrap gap-2 mb-4">
                             {movieData.genres.map((genre) => (
-                                <span className="bg-gray-800 px-3 py-1 rounded-full text-sm">
+                                <span key={genre.id || genre.name} className="bg-gray-800 px-3 py-1 rounded-full text-sm">
                                     {genre.name}
                                 </span>
                             ))}
@@ -103,8 +107,31 @@ const MoviePage = () => {
                         <p className="text-gray-400 italic">{movieData.overview || "No Overview Available."}</p>
                     </div>
                 </div>
+                {/* Recommendations Section */}
+            <div className="p-8">
+                <h2 className="text-2xl font-semibold mb-4">You might also like...</h2>
+                {recommendations.length > 0 ? (
+                    <div className="flex gap-4 flex-wrap">
+                        {recommendations.slice(0, 10).map((rec) => (
+                            <div key={rec.id} className="w-32">
+                                <Link to={`/movie/${rec.id}`}>
+                                    {rec.poster_path ? (
+                                        <img src={`https://image.tmdb.org/t/p/w200${rec.poster_path}`} alt={rec.title} className="rounded-lg shadow-lg w-32 hover:scale-105 transition-transform duration-300"/>
+                                    ) : (
+                                        <div className="rounded-lg bg-gray-700 w-32 h-48 flex items-center justify-center text-xs text-gray-300">No Image</div>
+                                    )}
+                                    <h3 className="mt-2 text-sm">{rec.title}</h3>
+                                    <span className="text-sm text-gray-400">{rec.release_date?.slice(0, 4) || '—'}</span>
+                                </Link>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-400">No recommendations available.</p>
+                )}
             </div>
-
+            </div>
+            
         </div>
     )
 }
